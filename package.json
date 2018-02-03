@@ -8,11 +8,11 @@
 		"url": "git://github.com/jldailey/dokyu.git"
 	},
 	"dependencies": {
-		"bling": ">=0.8.13",
-		"mongodb": ">=2.0.25"
+		"bling": "latest",
+		"mongodb": "latest"
 	},
 	"devDependencies": {
-		"coffee-script": "latest",
+		"coffeescript": "latest",
 		"mocha": "latest"
 	},
 	"scripts": {

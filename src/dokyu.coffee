@@ -27,7 +27,7 @@ Document = (collection, doc_opts) ->
 		collection: collection
 		ns: undefined
 	}, doc_opts
-	return classes[doc_opts.collection] or= class InnerDocument extends $.EventEmitter
+	return classes[doc_opts.collection] or= class InnerDocument
 
 		log = $.logger "[#{doc_opts.collection}]"
 
@@ -37,7 +37,6 @@ Document = (collection, doc_opts) ->
 		# the default constructor gets used to build instances,
 		# given a result document from the database
 		constructor: (props) ->
-			super @
 			if props? then for own k,v of props then @[k] = v
 			@instanceId = instance_counter++
 			@_id ?= createObjectId()
@@ -71,11 +70,11 @@ Document = (collection, doc_opts) ->
 
 		# construct all the stuff from a type, recursively
 		construct = (klass, stuff) ->
-			stuff = switch $.type stuff
-				when "object" then new klass stuff
+			switch $.type stuff
+				when "object" then return new klass stuff
 				when "array","bling"
-					stuff.map $.partial construct, klass
-				else stuff
+					return stuff.map $.partial construct, klass
+				else return stuff
 
 		# o wraps a db operation to do class-mapping on its output,
 		# e.g. MyDocument.findOne(query) searches the right collection,
@@ -181,9 +180,12 @@ Document = (collection, doc_opts) ->
 		# then save self and re-attach items
 		save: (cb) ->
 			try return p = $.Promise().wait (err, doc) -> cb? err, doc
-			finally db(doc_opts.ns).collection(doc_opts.collection).save(@).wait (err, write) =>
-				if err then p.reject err
-				else p.resolve @
+			finally 
+				# $.log "saving to db:", doc_opts.ns, db(doc_opts.ns), doc_opts.collection
+				db(doc_opts.ns).collection(doc_opts.collection).save(@).wait (err, write) =>
+					# $.log "saved:", err, write
+					if err then p.reject err
+					else p.resolve @
 
 		remove: (cb) ->
 			try return p = $.Promise().wait (err, doc) -> cb? err, doc
@@ -202,3 +204,4 @@ Document.disconnect = ->
 	Document
 
 module.exports = Document
+

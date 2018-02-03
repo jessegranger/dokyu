@@ -2,8 +2,6 @@ Document = require "../lib/dokyu"
 assert = require "assert"
 $ = require 'bling'
 
-test_log = $.logger "TEST:"
-
 describe "Document", ->
 
 	Document.connect "mongodb://localhost:27017/document_test", (err) ->
@@ -11,17 +9,23 @@ describe "Document", ->
 	describe ".connect", ->
 		it "supports namespaced connections", ->
 			Document.connect "beta", "mongodb://localhost:27017/beta", (err) ->
+	
+	describe "Document(collection)", ->
+		it "works", ->
+			assert Document("works")
 
 	describe "class extends Document(collection)", ->
-		it "is an EventEmitter", ->
-			class BasicDocument extends Document("basic")
-			assert.equal $.type(new BasicDocument().on), 'function'
 
 		it "takes properties given to the constructor", ->
 			class BasicDocument extends Document("basic")
 
 			b = new BasicDocument name: "magic"
 			assert.equal b.name, "magic"
+
+		it "save() returns a Promise", ->
+			class BasicDocument extends Document("basic")
+			p = new BasicDocument( magic: "words" ).save()
+			assert.equal ($.type p), 'promise'
 
 		it "stores objects in a collection", (done) ->
 			class BasicDocument extends Document("basic")
@@ -40,6 +44,8 @@ describe "Document", ->
 					assert.equal saved.magic, "flute"
 					done()
 
+			null
+
 		describe ".unique, .index", ->
 			it "ensures indexes and constraints", (done) ->
 				class Unique extends Document("uniques")
@@ -56,6 +62,8 @@ describe "Document", ->
 								assert.equal err?.code, 11000
 								done()
 
+				null
+
 		describe "uses the constructor", ->
 			it "when saving objects", (done) ->
 				class Constructed extends Document("constructs")
@@ -68,6 +76,7 @@ describe "Document", ->
 					assert.equal doc.name, "Jesse"
 					assert.equal doc.jazz(), "hands!"
 					done()
+				null
 			it "when fetching objects", (done) ->
 				class Constructed extends Document("constructs")
 					constructor: (props) ->
@@ -79,10 +88,10 @@ describe "Document", ->
 					assert.equal doc.name, "Jesse"
 					assert.equal doc.jazz(), "hands!"
 					done()
+				null
 
 		describe "static database operations:", ->
 
 describe "A Complete Example", ->
-	it "works", (done) ->
-		done()
+	it "TODO"
 

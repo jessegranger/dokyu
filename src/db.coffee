@@ -32,8 +32,8 @@ db = (ns = default_namespace) ->
 		opts = $.extend {}, opts, { safe: true }
 		log = $.logger "db.createCollection('#{name}', #{$.as 'repr', opts}, cb)"
 		key = ns + ":" + name
-		unless ns of connections then $.log "db: not connected: #{ns}"
-		else if key of collections then $.log "db: createCollection already exists:", name
+		unless ns of connections then log "error - db: not connected: #{ns}"
+		else if key of collections then log "error - db: createCollection already exists:", name
 		else
 			# log "waiting for connection..."
 			connections[ns].wait (err, _db) ->
@@ -51,13 +51,12 @@ db = (ns = default_namespace) ->
 			# log "starting"
 			unless ns of connections then p.fail "namespace not connected: #{ns}"
 			else
-				id = p.promiseId
 				fail_or = (pass) -> (e, r) ->
 					if e then return p.fail(e)
 					try pass(r) catch err
-						log "failed in callback", id, $.debugStack err.stack
+						log "failed in callback", p.promiseId, $.debugStack err.stack
 				connections[ns].wait fail_or (_db) ->
-					# log "--> to MongoClient..."
+					# log "--> to MongoClient...", _db?.constructor
 					_db.collection(_coll)[_op] args..., fail_or (result) ->
 						# log "<-- from MongoClient:", $.as 'string', result
 						p.resolve result
@@ -113,9 +112,10 @@ db.connect = (args...) ->
 	connections[ns] = $.extend p = $.Promise(),
 		ns: ns
 		url: url
-	# $.log "db: connect starting", url
-	MongoClient.connect url, { safe: true }, (err, db) ->
-		if err then p.reject(err) else p.resolve(db)
+	new MongoClient(url, {}).connect (err, client) ->
+		parsed = $.URL.parse(url)
+		dbName = parsed.path.split('/')[1]
+		if err then p.reject(err) else p.resolve(client.db(dbName))
 	p.wait (err) ->
 		if err then $.log "connection error:", err
 

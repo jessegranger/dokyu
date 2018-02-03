@@ -1,23 +1,23 @@
 COFFEE=node_modules/.bin/coffee
 MOCHA=node_modules/.bin/mocha
 MOCHA_REPORTER?=spec
-MOCHA_OPTS=--compilers coffee:coffee-script/register --globals document,window,Bling,$$,_ -R ${MOCHA_REPORTER} --bail -t 25000
+MOCHA_OPTS=--require coffeescript/register --globals document,window,Bling,$$,_ -R ${MOCHA_REPORTER} --bail -t 2500
 
-COFFEE_FILES=$(shell ls src/*.coffee)
-TEST_FILES=test/dokyu.coffee
+COFFEE_FILES=$(wildcard src/*.coffee)
+TEST_FILES=$(wildcard test/*.coffee)
 JS_FILES=$(shell ls src/*.coffee | sed -e 's/src/lib/' -e 's/coffee/js/')
 
 all: ${JS_FILES}
-	@echo "Done."
+	# Done.
 
 lib/%.js: src/%.coffee
-	@echo $< '>' $@
+	# $< > $@...
 	@(mkdir -p $(shell dirname $@) && \
 		sed -e 's/# .*$$//' $< | cpp -w > $(shell dirname $@)/$(shell basename $<) && \
 		${COFFEE} -cm $(shell dirname $@)/$(shell basename $<))
 
 test: ${JS_FILES} ${TEST_FILES}
-	@${MOCHA} ${MOCHA_OPTS}
+	@${MOCHA} ${MOCHA_OPTS} ${TEST_FILES}
 
 ${MOCHA}:
 	npm install mocha
