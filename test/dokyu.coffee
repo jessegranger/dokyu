@@ -93,5 +93,31 @@ describe "Document", ->
 		describe "static database operations:", ->
 
 describe "A Complete Example", ->
-	it "TODO"
+	it "works", (done) ->
+		class Alpha extends Document("alpha")
+			constructor: (props) ->
+				super(props)
+				@w = "W"
+				Object.defineProperty @, "x",
+					get: -> "X"
+			alpha: -> 1
+		class Beta extends Alpha
+			constructor: (props) ->
+				super(props)
+				Object.defineProperty @, "y",
+					get: -> "Y"
+				@z = "Z"
+			beta: -> 2
+
+		b = new Beta( b: "B" )
+		b.save().then ->
+			assert b._id != null
+			assert.equal b.w, "W"
+			assert.equal b.x, "X"
+			assert.equal b.y, "Y"
+			assert.equal b.z, "Z"
+			assert.equal b.alpha(), 1
+			assert.equal b.beta(), 2
+			done()
+		null
 
