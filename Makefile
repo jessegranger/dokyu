@@ -1,7 +1,7 @@
 COFFEE=node_modules/.bin/coffee
 MOCHA=node_modules/.bin/mocha
 MOCHA_REPORTER?=spec
-MOCHA_OPTS=--require coffeescript/register --globals document,window,Bling,$$,_ -R ${MOCHA_REPORTER} --bail -t 2500
+MOCHA_OPTS=--require coffeescript/register --globals document,window,Bling,$$,_ -R ${MOCHA_REPORTER} --bail -t 2500 --exit
 
 COFFEE_FILES=$(wildcard src/*.coffee)
 TEST_FILES=$(wildcard test/*.coffee)
