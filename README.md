@@ -26,8 +26,8 @@ doc.email = "arthur@camelot.com";
 await doc.save(); // this will add the '_id' field to doc
 
 var doc2 = await MyDocument.getOrCreate({ email: "arthur@camelot.com" })
-doc2.name # will be "Arthur", from the database
-doc2.greet() # will be "Hello, Arthur" from the prototype
+doc2.name // will be "Arthur", from the database
+doc2.greet() // will be "Hello, Arthur" from the prototype
 
 ```
 
