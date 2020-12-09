@@ -14,9 +14,9 @@ Document.connect "mongodb://localhost:27017/example"
 
 class MyDocument extends Document("my_collection") {
   constructor(name) {
-		super();
-		this.name = name;
-	}
+    super();
+    this.name = name;
+  }
   greet() { return "Hello, "+this.name; }
 }
 MyDocument.createIndexes({ title: 1 }, { unique: true });
@@ -54,7 +54,7 @@ API
 
   ```javascript
   const count = await MyDocument.count( query );
-	assert('number' == typeof count)
+  assert('number' == typeof count)
   ```
 
 * __MyDocument.findOne( query )__  → Promise(doc)
@@ -72,13 +72,13 @@ API
   - `projection(fields)`, limit the fields fetched on each item.
   - `next()`, return a Promise that resolves to the next item, once it's available, or null if the cursor is empty.
   - `skip(n)`, skip some items in the cursor.
-	- `limit(n)`, read at most `n` items.
-	- `filter(qry)`, only emit items that match the query object.
-	- `sort(keys)`, sort the results of the cursor.
-	- `count()`, return the number of items available to the cursor.
+  - `limit(n)`, read at most `n` items.
+  - `filter(qry)`, only emit items that match the query object.
+  - `sort(keys)`, sort the results of the cursor.
+  - `count()`, return the number of items available to the cursor.
   - `each(cb)`, calls `cb(doc)` for every result, each doc is an instance of MyDocument.
   - `toArray(cb)`, calls `cb(array)`, where array is full of MyDocument instances.
-	- `[Symbol.asyncIterator]`, the cursor can be read in a `for await (const item in cursor)` loop.
+  - `[Symbol.asyncIterator]`, the cursor can be read in a `for await (const item in cursor)` loop.
   
 * __MyDocument.updateOne( query, update, [ opts ] )__ → Promise
 
