@@ -10,13 +10,11 @@ const getClient = (timeout_ms) => race(timeout(timeout_ms || 1000), connection.v
 
 async function connect(url) {
 	try {
-		console.log("Connecting...");
 		dbName = url.split("/")[3]; // TODO: parse the url and validate the db name
 		var client = new MongoClient(url, { useUnifiedTopology: true });
 		if( "timeout" == await race(timeout(2000, "timeout"), client.connect()) ) {
 			connection.reject("timeout");
 		} else {
-			console.log("Connected.");
 			connection.resolve(client)
 		}
 	} catch(err) {
