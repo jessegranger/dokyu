@@ -22,7 +22,6 @@ async function connect(url) {
 	}
 }
 
-
 const nop = () => {}
 const emptyCursor = {
 	hasNext: () => false,
@@ -60,6 +59,11 @@ module.exports.Document = function Document(collectionName, docOpts) {
 		}
 	}
 	BaseDocument.fromObject = function(obj) {
+		// when an object comes back from the database,
+		// ops like findOne will call MyDocument.fromObject,
+		// (not BaseDocument.fromObject!), so 'this' will be:
+		// MyDocument, the target type of the data object,
+		// so just decorate that data with this prototype.
 		obj.__proto__ = this;
 		return obj;
 	}
@@ -77,6 +81,7 @@ module.exports.Document = function Document(collectionName, docOpts) {
 	db_hook('count', (qry) => mongoOp((coll) => coll.countDocuments(qry)));
 	db_hook('createIndexes');
 	db_hook('updateOne');
+	db_hook('updateMany');
 	db_hook('remove', (qry, opts) => mongoOp((coll) => coll.deleteMany(qry, opts)));
 	db_hook('deleteMany');
 	db_hook('deleteOne');
