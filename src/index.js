@@ -52,10 +52,11 @@ module.exports.Document = function Document(collectionName, docOpts) {
 	// define the new base class
 	class BaseDocument {
 		constructor(props) { Object.assign(this, props); }
-		save() {
-			return mongoOp((coll) => '_id' in this
+		async save() {
+			await mongoOp((coll) => '_id' in this
 				? coll.updateOne({ _id: this._id }, { "$set": this }, { w: docOpts.writeConcern, upsert: true })
 				: coll.insertOne(this, { w: docOpts.writeConcern }));
+			return this;
 		}
 	}
 	BaseDocument.fromObject = function(obj) {

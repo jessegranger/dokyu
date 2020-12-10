@@ -23,7 +23,7 @@ suite('Document', () => {
 	});
 
 	test('exports Document', function() {
-		assert(Document != null);
+		assert.notEqual(Document, null);
 	});
 
 	test('can be extended', async () => {
@@ -91,6 +91,20 @@ suite('Document', () => {
 		var doc = await Baz.getOrCreate({ x: 7 });
 		assert.equal(doc.xx, 7*7);
 	});
+
+	test('save returns the saved document', async () => {
+		class Saved extends Document("saved") {
+			constructor() {
+				super();
+				this.value = "1234";
+			}
+		}
+		const s = new Saved();
+		assert(!('_id' in s));
+		const doc = await s.save();
+		assert('_id' in doc);
+		assert.equal(doc._id, s._id);
+	})
 
 });
 
