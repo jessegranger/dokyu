@@ -65,6 +65,7 @@ module.exports.Document = function Document(collectionName, docOpts) {
 		// (not BaseDocument.fromObject!), so 'this' will be:
 		// MyDocument, the target type of the data object,
 		// so just decorate that data with this prototype.
+		if (obj == null) return null;
 		obj.__proto__ = this;
 		return obj;
 	}
@@ -72,44 +73,42 @@ module.exports.Document = function Document(collectionName, docOpts) {
 	// available directly from your sub-class, eg:
 	// class Foo extends Document('foos') { }
 	// await Foo.deleteMany({});
-	function db_hook(name, body) {
+	function db_hook(name, func) {
 		// a lot of simple operations have the same form, so provide that as a default here
 		// just wait for connection, do the thing, return the result
-		if (body == null) body = (...args) => mongoOp((coll) => coll[name](...args));
-		// must bind a real 'function' not a lambda, so that the context is passed as the sub-class type ('klass' below)
-		BaseDocument[name] = async function (...args) { return body.apply(this, args); }
+		if (func == null) func = (...args) => mongoOp((coll) => coll[name](...args));
+		// must bind a real 'function' not a lambda, so that the context is passed as the sub-class type (eg, Foo, not BaseDocument)
+		return BaseDocument[name] = async function (...args) { return func.apply(this, args); }
 	}
 	db_hook('count', (qry) => mongoOp((coll) => coll.countDocuments(qry)));
-	db_hook('createIndexes');
+	BaseDocument.createIndex = BaseDocument.ensureIndex =
+		db_hook('createIndexes');
 	db_hook('updateOne');
 	db_hook('updateMany');
-	db_hook('remove', (qry, opts) => mongoOp((coll) => coll.deleteMany(qry, opts)));
-	db_hook('deleteMany');
+	BaseDocument.remove = db_hook('deleteMany');
 	db_hook('deleteOne');
 	db_hook('findOne', async function findOne(qry) { // this has to be function, not lambda, so it will accept context from the caller
-		const klass = this, result = await mongoOp((coll) => coll.findOne(qry));
-		return (result == null) ? null : klass.fromObject(result);
+		return this.fromObject(await mongoOp((coll) => coll.findOne(qry)));
 	});
 	db_hook('find', async function find(qry, opts) {
-		const klass = this, client = await getClient();
+		const client = await getClient();
 		if( client == null ) throw new Error("Failed to connect to database.");
 		const cursor = (await mongoOp((coll) => coll.find(qry, opts))) || emptyCursor;
 		return { //  a fake Cursor that emits the proper type (klass, not raw mongo types)
-			[Symbol.asyncIterator]: async* function() { while( cursor.hasNext() ) yield(klass.fromObject((await(cursor.next())))); },
+			[Symbol.asyncIterator]: async* function() { while( cursor.hasNext() ) yield(this.fromObject((await(cursor.next())))); },
 			projection: (args) => { cursor.projection(args); return this },
 			skip:    (n)   => { cursor.skip(n); return this },
 			limit:   (n)   => { cursor.limit(n); return this },
 			count:   ()    => cursor.count(),
 			filter:  (qry) => { cursor.filter(qry); return this },
 			sort:    (key) => { cursor.sort(key); return this },
-			next:    ()    => new Promise((resolve, reject) => cursor.next((item) => resolve(klass.fromObject(item))).catch(reject)),
-			each:    (cb)  => { cursor.each((item) => cb(klass.fromObject(item))); return null },
-			toArray: ()    => new Promise((resolve, reject) => cursor.toArray((items) => resolve(items.map((item) => klass.fromObject(item)))).catch(reject)),
+			next:    ()    => new Promise((resolve, reject) => cursor.next((item) => resolve(this.fromObject(item))).catch(reject)),
+			each:    (cb)  => { cursor.each((item) => cb(this.fromObject(item))); return null },
+			toArray: ()    => new Promise((resolve, reject) => cursor.toArray((items) => resolve(items.map((item) => this.fromObject(item)))).catch(reject)),
 		}
 	});
 	db_hook('getOrCreate', async function(fields) {
-		const klass = this;
-		return (await race(timeout(docOpts.timeout), klass.findOne(fields))) || klass.fromObject(fields);
+		return (await race(timeout(docOpts.timeout), this.findOne(fields))) || this.fromObject(fields);
 	});
 	return BaseDocument;
 }

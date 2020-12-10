@@ -4,6 +4,12 @@ const { suite, test, suiteSetup, suiteTeardown, assert } = require('test-units')
 
 const { Document } = require('../src/index');
 
+const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const randomString = (len, prefix = "") => {
+	while (prefix.length < len) prefix += alphabet[Math.floor(random() * alphabet.length)];
+	return prefix;
+}
+
 suite('Document timeout', () => {
 	test('times out if not connected', { shouldFail: true }, async () => {
 		class Foo extends Document("foos") {
@@ -54,10 +60,10 @@ suite('Document', () => {
 		assert(!('_id' in f));
 		const result = await f.save();
 		assert('_id' in f);
-		f.magic = '1234';
+		f.magic = randomString(10);
 		await f.save();
 		const g = await Foo.getOrCreate({ name: "Bob" });
-		assert.equal(g.magic, "1234");
+		assert.equal(g.magic, f.magic);
 	})
 
 	test('can use a unique index', { shouldFail: true }, async () => {
@@ -96,7 +102,7 @@ suite('Document', () => {
 		class Saved extends Document("saved") {
 			constructor() {
 				super();
-				this.value = "1234";
+				this.value = randomString(10);
 			}
 		}
 		const s = new Saved();
